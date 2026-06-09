@@ -1,0 +1,1721 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Engineer Hiring Manager Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --navy: #17213a;
+      --blue: #2f5ea8;
+      --blue-quiet: #e8eef9;
+      --red: #b42318;
+      --red-quiet: #fff0ed;
+      --amber: #b7791f;
+      --amber-quiet: #fff7e6;
+      --green: #24745a;
+      --green-quiet: #eaf6f1;
+      --ink: #17213a;
+      --muted: #65758b;
+      --line: #d7deea;
+      --panel: #ffffff;
+      --field: #f6f8fb;
+      --shadow: 0 16px 50px rgba(23, 33, 58, 0.16);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: var(--field);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+    }
+
+    .topbar {
+      background: var(--navy);
+      color: #fff;
+      padding: 14px clamp(18px, 3vw, 34px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 4px solid #c9a14a;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .brand h1 {
+      font-size: clamp(20px, 2.3vw, 28px);
+      line-height: 1.05;
+      margin: 0;
+      font-weight: 760;
+    }
+
+    .brand span {
+      color: #cad6eb;
+      font-size: 13px;
+    }
+
+    .top-status {
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      gap: 10px;
+      align-items: center;
+      color: #f7f9ff;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .status-pill {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tabs {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 4px;
+      padding: 0 clamp(18px, 3vw, 34px);
+      min-height: 48px;
+      overflow-x: auto;
+    }
+
+    .tab-button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 0 13px;
+      min-height: 48px;
+      border-bottom: 3px solid transparent;
+      font-weight: 720;
+      white-space: nowrap;
+    }
+
+    .tab-button:hover {
+      color: var(--navy);
+      background: #f8faff;
+    }
+
+    .tab-button.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+
+    main {
+      min-height: 0;
+      padding: 18px clamp(18px, 3vw, 34px) 12px;
+    }
+
+    .tab-panel {
+      display: none;
+      min-height: 0;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.05fr) minmax(280px, 0.95fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric-card,
+    .panel,
+    .worker-card,
+    .stage-card,
+    .source-card,
+    .blocker-row,
+    .candidate-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .metric-card {
+      padding: 13px 14px;
+      min-height: 95px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .metric-card.clickable:hover,
+    .worker-card:hover,
+    .stage-card:hover,
+    .blocker-row:hover {
+      border-color: #9fb3d9;
+      box-shadow: 0 8px 24px rgba(23, 33, 58, 0.09);
+      transform: translateY(-1px);
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .value {
+      font-size: clamp(24px, 3.1vw, 34px);
+      line-height: 1;
+      font-weight: 780;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+
+    .metric-note {
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .trend.good {
+      color: var(--green);
+    }
+
+    .trend.warn {
+      color: var(--amber);
+    }
+
+    .trend.bad {
+      color: var(--red);
+    }
+
+    .panel {
+      min-height: 0;
+      padding: 15px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.15;
+      color: var(--navy);
+    }
+
+    .panel-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chart-panel {
+      min-height: 392px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .chart-metric-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .chart-stat {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent, var(--blue));
+      border-radius: var(--radius);
+      padding: 9px 10px;
+      background: #fbfcff;
+      min-height: 66px;
+    }
+
+    .chart-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+      text-transform: uppercase;
+    }
+
+    .chart-stat strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--navy);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .chart-wrap {
+      height: 270px;
+      min-height: 270px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(#fff, #fbfcff);
+      overflow: hidden;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .right-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bottleneck-main {
+      display: grid;
+      gap: 12px;
+    }
+
+    .attention-card {
+      border-left: 4px solid var(--red);
+      padding-left: 12px;
+    }
+
+    .attention-card h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .attention-card p {
+      margin: 5px 0 0;
+      color: var(--muted);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini-stat {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 9px;
+      background: #fbfcff;
+      min-height: 64px;
+    }
+
+    .mini-stat strong {
+      display: block;
+      font-size: 19px;
+      line-height: 1;
+      color: var(--navy);
+      margin-bottom: 5px;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pipeline-strip {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .pipeline-step {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 10px;
+      min-height: 86px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .pipeline-step::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      top: 50%;
+      width: 8px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .pipeline-step:last-child::after {
+      display: none;
+    }
+
+    .pipeline-step strong {
+      font-size: 22px;
+      line-height: 1;
+      color: var(--navy);
+    }
+
+    .pipeline-step span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .decision-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .decision-list li {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      padding: 8px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .decision-list li:first-child {
+      border-top: 0;
+    }
+
+    .rank {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--blue-quiet);
+      color: var(--blue);
+      font-weight: 760;
+      font-size: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 760;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .badge.good {
+      color: var(--green);
+      background: var(--green-quiet);
+      border-color: #bce4d5;
+    }
+
+    .badge.warn {
+      color: var(--amber);
+      background: var(--amber-quiet);
+      border-color: #f1d9a7;
+    }
+
+    .badge.bad {
+      color: var(--red);
+      background: var(--red-quiet);
+      border-color: #f0b6ae;
+    }
+
+    .badge.neutral {
+      color: var(--blue);
+      background: var(--blue-quiet);
+      border-color: #c9d6ee;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(210px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .worker-card {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+      min-height: 178px;
+      text-align: left;
+    }
+
+    .worker-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .worker-name {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.1;
+      color: var(--navy);
+    }
+
+    .worker-role {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .worker-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .worker-stats div {
+      border-top: 1px solid var(--line);
+      padding-top: 9px;
+      min-width: 0;
+    }
+
+    .worker-stats strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1;
+      color: var(--navy);
+    }
+
+    .worker-stats span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .worker-load {
+      display: grid;
+      gap: 6px;
+    }
+
+    .load-track {
+      width: 100%;
+      height: 8px;
+      background: #eef2f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .load-bar {
+      height: 100%;
+      background: var(--blue);
+      border-radius: inherit;
+    }
+
+    .team-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .compact-section {
+      display: grid;
+      gap: 14px;
+    }
+
+    .pipeline-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(210px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .stage-card {
+      padding: 14px;
+      min-height: 164px;
+      text-align: left;
+      display: grid;
+      gap: 12px;
+    }
+
+    .stage-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .stage-title {
+      margin: 0;
+      font-size: 16px;
+      color: var(--navy);
+    }
+
+    .stage-count {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 780;
+      color: var(--navy);
+    }
+
+    .stage-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stage-meta strong {
+      display: block;
+      color: var(--navy);
+      font-size: 16px;
+      margin-bottom: 3px;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr) 44px;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bar-track {
+      height: 8px;
+      background: #eef2f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: inherit;
+    }
+
+    .blocker-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      gap: 14px;
+    }
+
+    .blocker-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .blocker-row {
+      width: 100%;
+      text-align: left;
+      padding: 13px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .blocker-row h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .blocker-row p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .owner-column {
+      display: grid;
+      gap: 9px;
+    }
+
+    .owner-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .owner-row:first-child {
+      border-top: 0;
+    }
+
+    .capacity-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 14px;
+    }
+
+    .capacity-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .source-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .source-card {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .source-card strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .source-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer-status {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 10px clamp(18px, 3vw, 34px);
+      border-top: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer-status strong {
+      color: var(--navy);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.54);
+      z-index: 20;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(1020px, 96vw);
+      max-height: min(760px, 92vh);
+      background: #fff;
+      color: var(--ink);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.1;
+      color: var(--navy);
+    }
+
+    .modal-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--navy);
+      font-weight: 780;
+    }
+
+    .icon-button:hover {
+      background: var(--field);
+      border-color: #aab8cf;
+    }
+
+    .modal-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px 20px 20px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .modal-section {
+      display: grid;
+      gap: 9px;
+      align-content: start;
+    }
+
+    .modal-section h3 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--navy);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .candidate-card {
+      padding: 11px;
+      display: grid;
+      gap: 8px;
+      min-height: 100px;
+    }
+
+    .candidate-card strong {
+      font-size: 15px;
+      color: var(--navy);
+    }
+
+    .candidate-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .candidate-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .fine-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      padding: 8px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .fine-row:first-child {
+      border-top: 0;
+    }
+
+    .fine-row span {
+      color: var(--muted);
+    }
+
+    @media (max-width: 1120px) {
+      .metric-row,
+      .pipeline-strip,
+      .team-summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .overview-grid,
+      .blocker-layout,
+      .capacity-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .team-grid,
+      .pipeline-board {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-status {
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .metric-row,
+      .chart-metric-strip,
+      .pipeline-strip,
+      .team-summary,
+      .team-grid,
+      .pipeline-board,
+      .capacity-metrics,
+      .modal-grid,
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .blocker-row {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-metric-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .footer-status {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>AI Engineer Hiring Dashboard</h1>
+        <span>HR manager view for July 4 hiring goal</span>
+      </div>
+      <div class="top-status" aria-label="Dashboard status">
+        <span class="status-pill">Updated Jun 9, 2026 8:10 AM</span>
+        <span class="status-pill">Mock data</span>
+        <span class="status-pill">Manager demo</span>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Dashboard sections">
+      <button class="tab-button active" type="button" data-tab="overview">Overview</button>
+      <button class="tab-button" type="button" data-tab="team">HR Team</button>
+      <button class="tab-button" type="button" data-tab="pipeline">Pipeline</button>
+      <button class="tab-button" type="button" data-tab="bottlenecks">Bottlenecks</button>
+      <button class="tab-button" type="button" data-tab="capacity">Capacity / Sources</button>
+    </nav>
+
+    <main>
+      <section class="tab-panel active" id="overview" aria-label="Overview">
+        <div class="metric-row">
+          <button class="metric-card clickable" type="button" data-modal="goal">
+            <span class="label">Hired</span>
+            <span class="value">173 / 250</span>
+            <span class="metric-note"><span class="trend.warn">77 gap</span> by Jul 4</span>
+          </button>
+          <button class="metric-card clickable" type="button" data-modal="forecast">
+            <span class="label">Projected</span>
+            <span class="value">238</span>
+            <span class="metric-note"><span class="trend.bad">12 short</span> at current pace</span>
+          </button>
+          <button class="metric-card clickable" type="button" data-modal="pace">
+            <span class="label">Weekly Pace</span>
+            <span class="value">18</span>
+            <span class="metric-note">Need 22 starts/week</span>
+          </button>
+          <button class="metric-card clickable" type="button" data-modal="next14">
+            <span class="label">Next 14 Days</span>
+            <span class="value">43</span>
+            <span class="metric-note"><span class="trend.good">31 likely</span>, 12 at risk</span>
+          </button>
+          <button class="metric-card clickable" type="button" data-modal="risk">
+            <span class="label">Red SLA</span>
+            <span class="value">16</span>
+            <span class="metric-note">9 staffing owned</span>
+          </button>
+        </div>
+
+        <div class="overview-grid">
+          <section class="panel chart-panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Starts vs Plan</h2>
+                <p class="panel-subtitle">Actual starts, target pace, and accelerated FJO scenario</p>
+              </div>
+            </div>
+            <div class="chart-metric-strip" aria-label="Hiring goal summary">
+              <div class="chart-stat" style="--accent: var(--blue);">
+                <span>Started</span>
+                <strong>173</strong>
+              </div>
+              <div class="chart-stat" style="--accent: var(--red);">
+                <span>Goal</span>
+                <strong>250</strong>
+              </div>
+              <div class="chart-stat" style="--accent: var(--amber);">
+                <span>Remaining</span>
+                <strong>77</strong>
+              </div>
+              <div class="chart-stat" style="--accent: var(--green);">
+                <span>Pace Lift</span>
+                <strong>+12</strong>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg id="goalChart" viewBox="0 0 820 270" role="img" aria-label="Line chart showing actual starts behind target plan">
+                <rect width="820" height="270" fill="#fff" />
+                <line x1="44" y1="207.5" x2="724" y2="207.5" stroke="#e5eaf2" />
+                <line x1="44" y1="151.3" x2="724" y2="151.3" stroke="#e5eaf2" />
+                <line x1="44" y1="95.1" x2="724" y2="95.1" stroke="#e5eaf2" />
+                <line x1="44" y1="38.9" x2="724" y2="38.9" stroke="#e5eaf2" />
+                <path d="M 335.4 133.3 L 432.6 105.2 L 432.6 125.4 L 335.4 145.7 Z" fill="#fff0ed" />
+                <line x1="432.6" y1="28" x2="432.6" y2="230" stroke="#8a98ad" stroke-dasharray="3 5" />
+                <polyline points="44,217.6 141.1,189.5 238.3,161.4 335.4,133.3 432.6,105.2 529.7,77.1 626.9,52.4 724,38.9" fill="none" stroke="#b42318" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round" stroke-linejoin="round" />
+                <polyline points="44,217.6 141.1,195.1 238.3,171.5 335.4,145.7 432.6,125.4 529.7,87.2 626.9,55.7 724,28.7" fill="none" stroke="#24745a" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round" stroke-linejoin="round" />
+                <polyline points="44,217.6 141.1,195.1 238.3,171.5 335.4,145.7 432.6,125.4" fill="none" stroke="#2f5ea8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="44" cy="217.6" r="4" fill="#2f5ea8" />
+                <circle cx="141.1" cy="195.1" r="4" fill="#2f5ea8" />
+                <circle cx="238.3" cy="171.5" r="4" fill="#2f5ea8" />
+                <circle cx="335.4" cy="145.7" r="4" fill="#2f5ea8" />
+                <circle cx="432.6" cy="125.4" r="4.5" fill="#2f5ea8" />
+                <text x="12" y="211.5" fill="#65758b" font-size="11">100</text>
+                <text x="12" y="155.3" fill="#65758b" font-size="11">150</text>
+                <text x="12" y="99.1" fill="#65758b" font-size="11">200</text>
+                <text x="12" y="42.9" fill="#65758b" font-size="11">250</text>
+                <text x="44" y="258" text-anchor="middle" fill="#65758b" font-size="11">May 12</text>
+                <text x="141.1" y="258" text-anchor="middle" fill="#65758b" font-size="11">May 19</text>
+                <text x="238.3" y="258" text-anchor="middle" fill="#65758b" font-size="11">May 26</text>
+                <text x="335.4" y="258" text-anchor="middle" fill="#65758b" font-size="11">Jun 2</text>
+                <text x="432.6" y="258" text-anchor="middle" fill="#65758b" font-size="11">Jun 9</text>
+                <text x="529.7" y="258" text-anchor="middle" fill="#65758b" font-size="11">Jun 16</text>
+                <text x="626.9" y="258" text-anchor="middle" fill="#65758b" font-size="11">Jun 23</text>
+                <text x="724" y="258" text-anchor="middle" fill="#65758b" font-size="11">Jul 4</text>
+                <text x="442.6" y="20" fill="#65758b" font-size="11" font-weight="700">Today</text>
+                <text x="738" y="32" fill="#24745a" font-size="11" font-weight="700">FJO push</text>
+                <text x="738" y="52" fill="#b42318" font-size="11" font-weight="700">Target</text>
+              </svg>
+            </div>
+          </section>
+
+          <div class="right-stack">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Bottleneck Right Now</h2>
+                  <p class="panel-subtitle">Highest start impact</p>
+                </div>
+                <span class="badge bad">Red</span>
+              </div>
+              <button class="metric-card attention-card clickable" type="button" data-modal="approvedNoFjo" style="width:100%; text-align:left;">
+                <span class="label">Staffing owned</span>
+                <h3>Approved, no FJO/EOD</h3>
+                <p>24 candidates can move if final-offer work clears.</p>
+              </button>
+              <div class="mini-grid" style="margin-top:10px;">
+                <div class="mini-stat"><strong>9</strong><span>over SLA</span></div>
+                <div class="mini-stat"><strong>Jun 17</strong><span>earliest start</span></div>
+                <div class="mini-stat"><strong>+21</strong><span>possible starts</span></div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title">Priority Decisions</h2>
+                  <p class="panel-subtitle">Manager action queue</p>
+                </div>
+              </div>
+              <ol class="decision-list">
+                <li>
+                  <span class="rank">1</span>
+                  <span>Authorize FJO/EOD sprint for approved candidates.</span>
+                  <span class="badge bad">Today</span>
+                </li>
+                <li>
+                  <span class="rank">2</span>
+                  <span>Escalate security cases older than 7 days.</span>
+                  <span class="badge warn">Jun 10</span>
+                </li>
+                <li>
+                  <span class="rank">3</span>
+                  <span>Confirm HRC/PID capacity source.</span>
+                  <span class="badge neutral">Open</span>
+                </li>
+              </ol>
+            </section>
+          </div>
+        </div>
+
+        <section class="pipeline-strip" aria-label="Hiring pipeline counts">
+          <button class="pipeline-step" type="button" data-stage="selected"><span>Selected</span><strong>96</strong><span>14 red</span></button>
+          <button class="pipeline-step" type="button" data-stage="tjoReady"><span>TJO ready</span><strong>72</strong><span>8 waiting</span></button>
+          <button class="pipeline-step" type="button" data-stage="accepted"><span>Accepted</span><strong>61</strong><span>12 forms</span></button>
+          <button class="pipeline-step" type="button" data-stage="security"><span>Security</span><strong>49</strong><span>18 owned</span></button>
+          <button class="pipeline-step" type="button" data-stage="approved"><span>Approved</span><strong>24</strong><span>FJO queue</span></button>
+          <button class="pipeline-step" type="button" data-stage="fjo"><span>FJO sent</span><strong>18</strong><span>5 unsigned</span></button>
+          <button class="pipeline-step" type="button" data-stage="started"><span>Started</span><strong>173</strong><span>goal 250</span></button>
+        </section>
+      </section>
+
+      <section class="tab-panel" id="team" aria-label="HR Team">
+        <div class="team-summary">
+          <div class="metric-card">
+            <span class="label">Active Caseload</span>
+            <span class="value">107</span>
+            <span class="metric-note">Across 4 specialists</span>
+          </div>
+          <div class="metric-card">
+            <span class="label">Next 14 Starts</span>
+            <span class="value">43</span>
+            <span class="metric-note">31 likely, 12 at risk</span>
+          </div>
+          <div class="metric-card">
+            <span class="label">Oldest Item</span>
+            <span class="value">23d</span>
+            <span class="metric-note">FJO/EOD action</span>
+          </div>
+          <div class="metric-card">
+            <span class="label">Load Balance</span>
+            <span class="value">82%</span>
+            <span class="metric-note">No owner above redline</span>
+          </div>
+        </div>
+        <div class="team-grid" id="workerGrid"></div>
+      </section>
+
+      <section class="tab-panel" id="pipeline" aria-label="Pipeline">
+        <div class="compact-section">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Stage Health</h2>
+                <p class="panel-subtitle">Click any stage for candidate-level drilldown</p>
+              </div>
+              <span class="badge warn">Security + FJO constrained</span>
+            </div>
+            <div class="pipeline-board" id="stageBoard"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Start-Producing Movement</h2>
+                <p class="panel-subtitle">This week</p>
+              </div>
+            </div>
+            <div class="bar-list">
+              <div class="bar-row"><span>TJOs sent</span><div class="bar-track"><div class="bar-fill" style="width:72%"></div></div><strong>36</strong></div>
+              <div class="bar-row"><span>TJOs accepted</span><div class="bar-track"><div class="bar-fill" style="width:58%"></div></div><strong>29</strong></div>
+              <div class="bar-row"><span>Sent security</span><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><strong>31</strong></div>
+              <div class="bar-row"><span>FJOs accepted</span><div class="bar-track"><div class="bar-fill" style="width:42%"></div></div><strong>21</strong></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="bottlenecks" aria-label="Bottlenecks">
+        <div class="blocker-layout">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Start Blockers</h2>
+                <p class="panel-subtitle">Ranked by impact on July 4 goal</p>
+              </div>
+              <span class="badge bad">16 red SLA</span>
+            </div>
+            <div class="blocker-list" id="blockerList"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Owner Accountability</h2>
+                <p class="panel-subtitle">Open blockers</p>
+              </div>
+            </div>
+            <div class="owner-column">
+              <div class="owner-row"><span>Staffing owned</span><strong>37</strong></div>
+              <div class="owner-row"><span>Security owned</span><strong>29</strong></div>
+              <div class="owner-row"><span>Candidate owned</span><strong>21</strong></div>
+              <div class="owner-row"><span>Hiring manager owned</span><strong>8</strong></div>
+              <div class="owner-row"><span>Data/source conflict</span><strong>6</strong></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="capacity" aria-label="Capacity and Sources">
+        <div class="capacity-grid">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Capacity</h2>
+                <p class="panel-subtitle">Recruit-only slots are separate from actual seat capacity</p>
+              </div>
+              <span class="badge warn">1 source stale</span>
+            </div>
+            <div class="capacity-metrics">
+              <div class="metric-card"><span class="label">Authorized Seats</span><span class="value">300</span><span class="metric-note">Leadership plan</span></div>
+              <div class="metric-card"><span class="label">Current Starts</span><span class="value">173</span><span class="metric-note">Validated tracker</span></div>
+              <div class="metric-card"><span class="label">Pipeline Holds</span><span class="value">82</span><span class="metric-note">HRC/PID evidence</span></div>
+              <div class="metric-card"><span class="label">Reserved</span><span class="value">18</span><span class="metric-note">Carveouts</span></div>
+              <div class="metric-card"><span class="label">Recyclable Holds</span><span class="value">9</span><span class="metric-note">Closeout list</span></div>
+              <div class="metric-card"><span class="label">Selectable Now</span><span class="value">36</span><span class="metric-note"><span class="trend.warn">verify HRC refresh</span></span></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title">Sources</h2>
+                <p class="panel-subtitle">Daily refresh status</p>
+              </div>
+            </div>
+            <div class="source-grid">
+              <div class="source-card"><div><strong>Master tracker</strong><span>Jun 9, 7:42 AM</span></div><span class="badge good">Fresh</span></div>
+              <div class="source-card"><div><strong>USA Staffing report</strong><span>Jun 9, 7:55 AM</span></div><span class="badge good">Fresh</span></div>
+              <div class="source-card"><div><strong>OSP security export</strong><span>Jun 9, 6:30 AM</span></div><span class="badge good">Fresh</span></div>
+              <div class="source-card"><div><strong>HRC/PID evidence</strong><span>Jun 6, 4:10 PM</span></div><span class="badge warn">Stale</span></div>
+              <div class="source-card"><div><strong>New-hire gates</strong><span>Jun 9, 8:01 AM</span></div><span class="badge good">Fresh</span></div>
+              <div class="source-card"><div><strong>Source conflicts</strong><span>6 active conflicts</span></div><span class="badge bad">Review</span></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer-status">
+      <span><strong>Automation:</strong> daily refresh complete, Friday triage ready, Monday delta pending</span>
+      <span><strong>Data caveat:</strong> fake demo data, source freshness states shown for workflow realism</span>
+    </footer>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="presentation">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <header class="modal-header">
+        <div>
+          <h2 class="modal-title" id="modalTitle"></h2>
+          <p class="modal-subtitle" id="modalSubtitle"></p>
+        </div>
+        <button class="icon-button" type="button" id="modalClose" aria-label="Close modal">X</button>
+      </header>
+      <div class="modal-body" id="modalBody"></div>
+    </section>
+  </div>
+
+  <script>
+    const workers = [
+      {
+        id: "chance",
+        name: "Chance Rawson",
+        role: "Senior HR specialist",
+        active: 31,
+        red: 5,
+        next14: 12,
+        avgAge: "6.2d",
+        load: 82,
+        stages: {
+          "Approved / FJO needed": [
+            c("Nora Patel", "FJO/EOD action", 10, "Jun 17", "Approved, checklist ready"),
+            c("Elliot Marsh", "Date confirmation", 8, "Jun 17", "Security approved"),
+            c("Mika Harris", "Final offer", 3, "Jun 24", "Pending EOD confirmation")
+          ],
+          "Security pending": [
+            c("Alex Rivera", "eApp pending", 14, "Jun 24", "Candidate has not logged in"),
+            c("Leah Brooks", "Fingerprint result", 4, "Jun 24", "SAC processing"),
+            c("Priya Nair", "Reciprocity review", 3, "Jul 1", "Security owner")
+          ],
+          "TJO / Forms": [
+            c("Marco Diaz", "OF-306 missing", 2, "Jul 1", "Candidate owned"),
+            c("Imani Clarke", "TJO response", 1, "Jul 1", "48-hour window")
+          ]
+        }
+      },
+      {
+        id: "alli",
+        name: "Alli Dixon",
+        role: "HR specialist",
+        active: 27,
+        red: 4,
+        next14: 10,
+        avgAge: "5.8d",
+        load: 76,
+        stages: {
+          "Approved / FJO needed": [
+            c("Rina Sato", "FJO/EOD action", 23, "Jun 17", "Cleared, tracker conflict"),
+            c("Owen Bell", "Final offer", 3, "Jun 24", "Ready for send")
+          ],
+          "Security pending": [
+            c("Tessa Grant", "Fingerprint enrollment", 8, "Jul 1", "Candidate owned"),
+            c("Diego Stone", "eApp corrections", 3, "Jul 1", "Returned by security"),
+            c("Mina Wolfe", "Proof of citizenship", 7, "Jul 1", "Candidate owned")
+          ],
+          "TJO / Forms": [
+            c("Jonah Reed", "TJO sent", 1, "Jul 1", "Awaiting response"),
+            c("Sasha Kim", "Forms due", 2, "Jul 1", "OF-306 not complete")
+          ]
+        }
+      },
+      {
+        id: "brad",
+        name: "Brad Wilcox",
+        role: "HR specialist",
+        active: 29,
+        red: 6,
+        next14: 11,
+        avgAge: "7.1d",
+        load: 86,
+        stages: {
+          "Approved / FJO needed": [
+            c("Caleb Young", "FJO/EOD action", 19, "Jun 17", "Approved to EOD"),
+            c("Ava Singh", "FJO action", 4, "Jun 24", "Cleared by security"),
+            c("Mason Ford", "Date action", 2, "Jun 24", "EOD date missing")
+          ],
+          "Security pending": [
+            c("Kira Novak", "Fingerprint enrollment", 4, "Jul 1", "Pending scheduling"),
+            c("Samir Shah", "eApp rejected", 2, "Jul 1", "Corrections requested"),
+            c("Henry Lane", "Fingerprint result", 4, "Jul 1", "Missed appointment")
+          ],
+          "TJO / Forms": [
+            c("Jules Carter", "TJO response", 1, "Jul 1", "Candidate owned")
+          ]
+        }
+      },
+      {
+        id: "lori",
+        name: "Lori Longwell",
+        role: "HR specialist",
+        active: 20,
+        red: 1,
+        next14: 10,
+        avgAge: "4.9d",
+        load: 64,
+        stages: {
+          "Approved / FJO needed": [
+            c("Noah Chen", "Checklist upload", 2, "Jun 24", "Peer review approved")
+          ],
+          "Security pending": [
+            c("Iris Moreno", "eApp review", 8, "Jul 1", "Security review"),
+            c("Theo Pierce", "Fingerprint enrollment", 3, "Jul 1", "Candidate owned")
+          ],
+          "TJO / Forms": [
+            c("Lena Park", "OF-306 review", 2, "Jul 1", "HR owned"),
+            c("Arun Mehta", "TJO accepted", 1, "Jul 1", "Forms active")
+          ]
+        }
+      }
+    ];
+
+    const stages = [
+      { id: "selected", title: "Selected", count: 96, age: "4.6d", red: 14, owner: "HRConnect/PID", note: "Selections need request validation" },
+      { id: "tjoReady", title: "TJO Ready", count: 72, age: "3.1d", red: 8, owner: "Staffing", note: "Position verification and offer send" },
+      { id: "accepted", title: "Accepted / Forms", count: 61, age: "4.8d", red: 12, owner: "Candidate", note: "OF-306 and documents" },
+      { id: "security", title: "Security", count: 49, age: "6.7d", red: 18, owner: "Security", note: "Fingerprint, eApp, reciprocity" },
+      { id: "approved", title: "Approved", count: 24, age: "7.4d", red: 9, owner: "Staffing", note: "FJO/EOD work unlocks starts" },
+      { id: "fjo", title: "FJO Sent", count: 18, age: "2.2d", red: 5, owner: "Candidate", note: "Final response and start instructions" },
+      { id: "started", title: "Started", count: 173, age: "0d", red: 0, owner: "Complete", note: "Validated starts toward goal" }
+    ];
+
+    const blockers = [
+      { id: "approvedNoFjo", name: "Approved but no FJO/EOD", count: 24, red: 9, owner: "Staffing", impact: "+21 starts", note: "Final offer, start date, checklist evidence" },
+      { id: "securityPending", name: "Security older than SLA", count: 18, red: 7, owner: "Security", impact: "+12 starts", note: "eApp, fingerprint, reciprocity, ISP" },
+      { id: "formsMissing", name: "Accepted but forms missing", count: 12, red: 3, owner: "Candidate", impact: "+8 starts", note: "OF-306 and onboarding documents" },
+      { id: "positionVerify", name: "Position verification waiting", count: 8, red: 2, owner: "Hiring manager", impact: "+6 starts", note: "Supervisor, org, duty station, clearance data" },
+      { id: "sourceConflict", name: "Source conflicts", count: 6, red: 1, owner: "Data/source", impact: "capacity risk", note: "Tracker and security export disagree" }
+    ];
+
+    const modalDetails = {
+      goal: {
+        title: "July 4 Goal",
+        subtitle: "Target: 250 starts by Jul 4, 2026",
+        rows: [
+          ["Current validated starts", "173"],
+          ["Remaining gap", "77"],
+          ["Business days remaining", "18"],
+          ["Required weekly pace", "22 starts/week"],
+          ["Current weekly pace", "18 starts/week"]
+        ]
+      },
+      forecast: {
+        title: "Forecast",
+        subtitle: "Current pace versus manager intervention scenario",
+        rows: [
+          ["Current projection", "238 starts"],
+          ["Projected shortfall", "12 starts"],
+          ["If FJO queue clears", "259 starts"],
+          ["Highest leverage action", "Approved candidate sprint"],
+          ["Secondary lever", "Security SLA escalation"]
+        ]
+      },
+      pace: {
+        title: "Weekly Pace",
+        subtitle: "Starts required to hit July 4 goal",
+        rows: [
+          ["Last week", "18 starts"],
+          ["This week confirmed", "11 starts"],
+          ["This week plausible", "29 starts"],
+          ["Needed per week", "22 starts"],
+          ["Pace status", "Behind plan"]
+        ]
+      },
+      next14: {
+        title: "Next 14 Days",
+        subtitle: "Earliest-start view",
+        rows: [
+          ["Likely starts", "31"],
+          ["At-risk starts", "12"],
+          ["Needs FJO/EOD", "24"],
+          ["Security dependent", "18"],
+          ["Candidate-owned blockers", "9"]
+        ]
+      },
+      risk: {
+        title: "Red SLA Items",
+        subtitle: "Items requiring manager attention",
+        rows: [
+          ["Staffing owned", "9"],
+          ["Security owned", "5"],
+          ["Candidate owned", "2"],
+          ["Oldest open item", "23 days"],
+          ["Most common issue", "Approved, no FJO/EOD"]
+        ]
+      }
+    };
+
+    function c(name, action, days, start, note) {
+      return { name, action, days, start, note };
+    }
+
+    function badgeClass(value) {
+      if (value >= 6) return "bad";
+      if (value >= 2) return "warn";
+      return "good";
+    }
+
+    function renderWorkers() {
+      const grid = document.getElementById("workerGrid");
+      grid.innerHTML = workers.map(worker => `
+        <button class="worker-card" type="button" data-worker="${worker.id}">
+          <div class="worker-top">
+            <div>
+              <h2 class="worker-name">${worker.name}</h2>
+              <div class="worker-role">${worker.role}</div>
+            </div>
+            <span class="badge ${worker.red > 4 ? "bad" : "warn"}">${worker.red} red</span>
+          </div>
+          <div class="worker-stats">
+            <div><strong>${worker.active}</strong><span>Active</span></div>
+            <div><strong>${worker.next14}</strong><span>Next 14</span></div>
+            <div><strong>${worker.avgAge}</strong><span>Avg age</span></div>
+          </div>
+          <div class="worker-load">
+            <div class="load-track"><div class="load-bar" style="width:${worker.load}%"></div></div>
+            <span class="metric-note">Load ${worker.load}%</span>
+          </div>
+        </button>
+      `).join("");
+    }
+
+    function renderStages() {
+      const board = document.getElementById("stageBoard");
+      board.innerHTML = stages.map(stage => `
+        <button class="stage-card" type="button" data-stage="${stage.id}">
+          <div class="stage-head">
+            <div>
+              <h2 class="stage-title">${stage.title}</h2>
+              <div class="metric-note">${stage.note}</div>
+            </div>
+            <span class="stage-count">${stage.count}</span>
+          </div>
+          <div class="stage-meta">
+            <div><strong>${stage.age}</strong>Avg age</div>
+            <div><strong>${stage.red}</strong>Red SLA</div>
+          </div>
+          <span class="badge ${stage.red > 8 ? "bad" : stage.red > 0 ? "warn" : "good"}">${stage.owner}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderBlockers() {
+      const list = document.getElementById("blockerList");
+      list.innerHTML = blockers.map(blocker => `
+        <button class="blocker-row" type="button" data-blocker="${blocker.id}">
+          <div>
+            <h3>${blocker.name}</h3>
+            <p>${blocker.note}</p>
+          </div>
+          <span class="badge ${blocker.red > 5 ? "bad" : blocker.red > 0 ? "warn" : "good"}">${blocker.red} red</span>
+          <strong>${blocker.impact}</strong>
+        </button>
+      `).join("");
+    }
+
+    function renderChart() {
+      const svg = document.getElementById("goalChart");
+      const width = 820;
+      const height = 270;
+      const pad = { top: 22, right: 96, bottom: 40, left: 44 };
+      const dates = ["May 12", "May 19", "May 26", "Jun 2", "Jun 9", "Jun 16", "Jun 23", "Jul 4"];
+      const actual = [91, 111, 132, 155, 173, null, null, null];
+      const target = [91, 116, 141, 166, 191, 216, 238, 250];
+      const push = [91, 111, 132, 155, 173, 207, 235, 259];
+      const min = 80;
+      const max = 265;
+      const innerW = width - pad.left - pad.right;
+      const innerH = height - pad.top - pad.bottom;
+      const x = index => pad.left + (index / (dates.length - 1)) * innerW;
+      const y = value => pad.top + (1 - (value - min) / (max - min)) * innerH;
+      const line = values => values
+        .map((value, index) => value === null ? null : `${x(index)},${y(value)}`)
+        .filter(Boolean)
+        .join(" ");
+      const plotEnd = width - pad.right;
+      const grid = [100, 150, 200, 250].map(value => `
+        <line x1="${pad.left}" y1="${y(value)}" x2="${plotEnd}" y2="${y(value)}" stroke="#e5eaf2" />
+        <text x="12" y="${y(value) + 4}" fill="#65758b" font-size="11">${value}</text>
+      `).join("");
+      const labels = dates.map((date, index) => `
+        <text x="${x(index)}" y="${height - 12}" text-anchor="middle" fill="#65758b" font-size="11">${date}</text>
+      `).join("");
+      const actualPoints = actual.map((value, index) => value === null ? "" : `<circle cx="${x(index)}" cy="${y(value)}" r="4" fill="#2f5ea8" />`).join("");
+      const todayIndex = 4;
+      const gapPath = `
+        M ${x(todayIndex - 1)} ${y(target[todayIndex - 1])}
+        L ${x(todayIndex)} ${y(target[todayIndex])}
+        L ${x(todayIndex)} ${y(actual[todayIndex])}
+        L ${x(todayIndex - 1)} ${y(actual[todayIndex - 1])}
+        Z
+      `;
+
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.innerHTML = `
+        <rect width="${width}" height="${height}" fill="#fff" />
+        ${grid}
+        <path d="${gapPath}" fill="#fff0ed" />
+        <line x1="${x(todayIndex)}" y1="${pad.top + 6}" x2="${x(todayIndex)}" y2="${height - pad.bottom}" stroke="#8a98ad" stroke-dasharray="3 5" />
+        <polyline points="${line(target)}" fill="none" stroke="#b42318" stroke-width="3" stroke-dasharray="7 7" stroke-linecap="round" stroke-linejoin="round" />
+        <polyline points="${line(push)}" fill="none" stroke="#24745a" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round" stroke-linejoin="round" />
+        <polyline points="${line(actual)}" fill="none" stroke="#2f5ea8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        ${actualPoints}
+        ${labels}
+        <text x="${x(todayIndex) + 10}" y="20" fill="#65758b" font-size="11" font-weight="700">Today</text>
+        <text x="${plotEnd + 14}" y="${y(push[7]) + 3}" fill="#24745a" font-size="11" font-weight="700">FJO push</text>
+        <text x="${plotEnd + 14}" y="${y(target[7]) + 14}" fill="#b42318" font-size="11" font-weight="700">Target</text>
+      `;
+    }
+
+    function openMetricModal(id) {
+      const detail = modalDetails[id];
+      if (!detail) return;
+      openModal(detail.title, detail.subtitle, `
+        <div class="modal-grid">
+          <div class="modal-section">
+            <h3>Manager Summary</h3>
+            ${detail.rows.map(row => `
+              <div class="fine-row"><span>${row[0]}</span><strong>${row[1]}</strong></div>
+            `).join("")}
+          </div>
+          <div class="modal-section">
+            <h3>Near-Term Candidates <span class="badge warn">12 at risk</span></h3>
+            ${sampleCandidates(5).map(candidateCard).join("")}
+          </div>
+          <div class="modal-section">
+            <h3>Decision Levers <span class="badge neutral">3 open</span></h3>
+            <div class="candidate-card"><strong>FJO/EOD sprint</strong><span>Moves approved candidates into confirmed starts.</span><div class="candidate-meta"><span class="badge bad">Today</span><span class="badge neutral">Staffing</span></div></div>
+            <div class="candidate-card"><strong>Security escalation</strong><span>Targets cases older than SLA with start dates inside 14 days.</span><div class="candidate-meta"><span class="badge warn">Jun 10</span><span class="badge neutral">Security</span></div></div>
+            <div class="candidate-card"><strong>Capacity source refresh</strong><span>Confirms whether selections can continue safely.</span><div class="candidate-meta"><span class="badge warn">Open</span><span class="badge neutral">Data</span></div></div>
+          </div>
+        </div>
+      `);
+    }
+
+    function openWorkerModal(workerId) {
+      const worker = workers.find(item => item.id === workerId);
+      if (!worker) return;
+      const sections = Object.entries(worker.stages).map(([stageName, candidates]) => `
+        <div class="modal-section">
+          <h3>${stageName} <span class="badge ${candidates.length > 2 ? "warn" : "good"}">${candidates.length}</span></h3>
+          ${candidates.map(candidateCard).join("")}
+        </div>
+      `).join("");
+      openModal(worker.name, `${worker.active} active cases, ${worker.next14} next-14-day starts, ${worker.red} red SLA`, `<div class="modal-grid">${sections}</div>`);
+    }
+
+    function openStageModal(stageId) {
+      const stage = stages.find(item => item.id === stageId);
+      if (!stage) return;
+      const grouped = {
+        "Oldest in stage": sampleCandidates(4, stage.title),
+        "Can start by Jun 24": sampleCandidates(3, stage.title).slice(0, 3),
+        "Owner actions": [
+          c("Queue action", `${stage.owner}: clear stage blockers`, stage.red, "This week", stage.note),
+          c("SLA review", "Review red items and oldest cases", stage.red, "Today", `${stage.red} red SLA items`),
+          c("Source check", "Validate tracker against source", 1, "Jun 10", "Resolve mismatched status")
+        ]
+      };
+      const html = Object.entries(grouped).map(([title, candidates]) => `
+        <div class="modal-section">
+          <h3>${title} <span class="badge neutral">${candidates.length}</span></h3>
+          ${candidates.map(candidateCard).join("")}
+        </div>
+      `).join("");
+      openModal(stage.title, `${stage.count} candidates, ${stage.age} average stage age, owner: ${stage.owner}`, `<div class="modal-grid">${html}</div>`);
+    }
+
+    function openBlockerModal(blockerId) {
+      const blocker = blockers.find(item => item.id === blockerId);
+      if (!blocker) return;
+      const html = `
+        <div class="modal-grid">
+          <div class="modal-section">
+            <h3>Impact</h3>
+            <div class="fine-row"><span>Open cases</span><strong>${blocker.count}</strong></div>
+            <div class="fine-row"><span>Red SLA</span><strong>${blocker.red}</strong></div>
+            <div class="fine-row"><span>Owner group</span><strong>${blocker.owner}</strong></div>
+            <div class="fine-row"><span>Goal impact</span><strong>${blocker.impact}</strong></div>
+          </div>
+          <div class="modal-section">
+            <h3>Representative Cases</h3>
+            ${sampleCandidates(5, blocker.name).map(candidateCard).join("")}
+          </div>
+          <div class="modal-section">
+            <h3>Manager Actions</h3>
+            <div class="candidate-card"><strong>Assign owner sweep</strong><span>${blocker.note}</span><div class="candidate-meta"><span class="badge bad">Today</span><span class="badge neutral">${blocker.owner}</span></div></div>
+            <div class="candidate-card"><strong>Clear source conflicts</strong><span>Reconcile tracker, security export, and USA Staffing status.</span><div class="candidate-meta"><span class="badge warn">Jun 10</span><span class="badge neutral">Data</span></div></div>
+          </div>
+        </div>
+      `;
+      openModal(blocker.name, `${blocker.count} open cases, ${blocker.impact}`, html);
+    }
+
+    function sampleCandidates(count, stageLabel = "Start readiness") {
+      const names = [
+        "Maya Ellis", "Andre Cole", "Vera Lin", "Isaac Romero", "Nadia Blake",
+        "Theo Martin", "Camila Ortiz", "Grant Lee", "Parker James", "Dina Wells"
+      ];
+      return names.slice(0, count).map((name, index) => c(
+        name,
+        index % 2 === 0 ? "Owner follow-up" : "Candidate response",
+        [12, 8, 6, 3, 1][index] || 2,
+        ["Jun 17", "Jun 24", "Jun 24", "Jul 1", "Jul 1"][index] || "Jul 1",
+        stageLabel
+      ));
+    }
+
+    function candidateCard(candidate) {
+      return `
+        <article class="candidate-card">
+          <strong>${candidate.name}</strong>
+          <span>${candidate.action}</span>
+          <div class="candidate-meta">
+            <span class="badge ${badgeClass(candidate.days)}">${candidate.days}d</span>
+            <span class="badge neutral">${candidate.start}</span>
+            <span class="badge good">${candidate.note}</span>
+          </div>
+        </article>
+      `;
+    }
+
+    function openModal(title, subtitle, bodyHtml) {
+      document.getElementById("modalTitle").textContent = title;
+      document.getElementById("modalSubtitle").textContent = subtitle;
+      document.getElementById("modalBody").innerHTML = bodyHtml;
+      document.getElementById("modalBackdrop").classList.add("open");
+      document.getElementById("modalClose").focus();
+    }
+
+    function closeModal() {
+      document.getElementById("modalBackdrop").classList.remove("open");
+    }
+
+    function wireEvents() {
+      document.querySelectorAll(".tab-button").forEach(button => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".tab-button").forEach(item => item.classList.remove("active"));
+          document.querySelectorAll(".tab-panel").forEach(item => item.classList.remove("active"));
+          button.classList.add("active");
+          document.getElementById(button.dataset.tab).classList.add("active");
+        });
+      });
+
+      document.body.addEventListener("click", event => {
+        const workerButton = event.target.closest("[data-worker]");
+        const stageButton = event.target.closest("[data-stage]");
+        const blockerButton = event.target.closest("[data-blocker]");
+        const modalButton = event.target.closest("[data-modal]");
+        if (workerButton) openWorkerModal(workerButton.dataset.worker);
+        if (stageButton) openStageModal(stageButton.dataset.stage);
+        if (blockerButton) openBlockerModal(blockerButton.dataset.blocker);
+        if (modalButton) openMetricModal(modalButton.dataset.modal);
+      });
+
+      document.getElementById("modalClose").addEventListener("click", closeModal);
+      document.getElementById("modalBackdrop").addEventListener("click", event => {
+        if (event.target.id === "modalBackdrop") closeModal();
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") closeModal();
+      });
+    }
+
+    renderWorkers();
+    renderStages();
+    renderBlockers();
+    renderChart();
+    wireEvents();
+  </script>
+</body>
+</html>
